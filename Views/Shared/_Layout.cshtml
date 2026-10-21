@@ -1,0 +1,56 @@
+@{ var controller = ViewContext.RouteData.Values["controller"]?.ToString(); }
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="VEGA CINEMAS — Khám phá những câu chuyện lớn trên màn ảnh. Xem lịch chiếu, chọn ghế và đặt vé trực tuyến." />
+    <title>@ViewData["Title"] · VEGA CINEMAS</title>
+    <link rel="icon" href="~/images/vega.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+<a class="skip-link" href="#main">Đến nội dung chính</a>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" asp-area="" asp-controller="Home" asp-action="Index" aria-label="Vega Cinemas — Trang chủ"><span class="brand-mark">V<span>✦</span></span><span>VEGA<small>C I N E M A S</small></span></a>
+    <button class="menu-toggle" type="button" aria-label="Mở menu" aria-expanded="false" aria-controls="main-nav">☰</button>
+    <nav id="main-nav" class="main-nav" aria-label="Điều hướng chính">
+      <a class="@(controller == "Home" ? "active" : "")" asp-area="" asp-controller="Home" asp-action="Index">Trang chủ</a>
+      <a class="@(controller == "Movies" ? "active" : "")" asp-area="" asp-controller="Movies" asp-action="Index" asp-route-status="NOW_SHOWING">Phim đang chiếu</a>
+      <a asp-area="" asp-controller="Movies" asp-action="Index" asp-route-status="COMING_SOON">Phim sắp chiếu</a>
+      <a class="@(controller == "Schedule" ? "active" : "")" asp-area="" asp-controller="Schedule" asp-action="Index">Lịch chiếu</a>
+      <a class="@(controller == "Cinemas" ? "active" : "")" asp-area="" asp-controller="Cinemas" asp-action="Index">Hệ thống rạp</a>
+    </nav>
+    <div class="header-actions">
+      <form class="header-search" asp-area="" asp-controller="Movies" asp-action="Index" method="get"><label class="visually-hidden" for="header-search">Tìm phim</label><span aria-hidden="true">⌕</span><input id="header-search" name="search" placeholder="Tìm phim…" maxlength="160" /></form>
+      @if (User.Identity?.IsAuthenticated == true)
+      {
+        <a class="account-link" asp-area="" asp-controller="Booking" asp-action="History" title="Vé của tôi">◉ <span>Vé của tôi</span></a>
+        <div class="dropdown"><button class="avatar dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-label="Tài khoản">V</button><ul class="dropdown-menu dropdown-menu-end">
+          <li><a class="dropdown-item" asp-area="" asp-controller="Account" asp-action="Profile">Hồ sơ cá nhân</a></li>
+          @if (User.IsInRole(Roles.Admin)) { <li><a class="dropdown-item" href="/Admin">Quản trị hệ thống</a></li> }
+          @if (User.IsInRole(Roles.Manager)) { <li><a class="dropdown-item" href="/Admin/Reports">Báo cáo doanh thu</a></li> }
+          @if (User.IsInRole(Roles.Staff) || User.IsInRole(Roles.Admin)) { <li><a class="dropdown-item" href="/Staff">Tra cứu đơn</a></li> }
+          @if (User.IsInRole(Roles.Checker) || User.IsInRole(Roles.Admin)) { <li><a class="dropdown-item" href="/Staff/Check">Kiểm soát vé</a></li> }
+          <li><form asp-area="" asp-controller="Account" asp-action="Logout" method="post"><button class="dropdown-item" type="submit">Đăng xuất</button></form></li>
+        </ul></div>
+      }
+      else { <a class="btn btn-outline-light btn-sm login-link" asp-area="" asp-controller="Account" asp-action="Login">Đăng nhập <span aria-hidden="true">↗</span></a> }
+    </div>
+  </div>
+</header>
+<main id="main">
+  @if (TempData["Error"] is string error) { <div class="container page-alert"><div class="alert alert-danger" role="alert">@error</div></div> }
+  @if (TempData["Success"] is string success) { <div class="container page-alert"><div class="alert alert-success" role="status">@success</div></div> }
+  @RenderBody()
+</main>
+<footer class="site-footer"><div class="container footer-grid">
+  <div><a class="brand footer-brand" href="/"><span class="brand-mark">V<span>✦</span></span><span>VEGA<small>C I N E M A S</small></span></a><p>Mỗi thước phim. Một thế giới mới.<br />Trải nghiệm điện ảnh theo cách của bạn.</p></div>
+  <div><h3>Khám phá VEGA</h3><a href="/Movies">Thế giới điện ảnh</a><a href="/Schedule">Lịch chiếu & đặt vé</a><a href="/Cinemas">Hệ thống rạp</a></div>
+  <div><h3>Đồng hành cùng bạn</h3><a href="/Home/Privacy">Điều khoản & chính sách</a><a href="/Booking/History">Đơn đặt vé của tôi</a><a href="mailto:hello@vega.example">hello@vega.example</a></div>
+  <div class="footer-note"><span class="eyebrow">HẸN BẠN Ở RẠP</span><p>Màn ảnh lớn.<br /><strong>Cảm xúc thật.</strong></p><span class="muted">Dự án học tập · Dữ liệu phim demo</span></div>
+</div><div class="container footer-bottom"><span>© @DateTime.UtcNow.Year VEGA CINEMAS</span><span>Được tạo nên từ tình yêu điện ảnh <b>✦</b></span></div></footer>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script><script src="~/js/site.js" asp-append-version="true"></script>
+@await RenderSectionAsync("Scripts", required: false)
+</body></html>

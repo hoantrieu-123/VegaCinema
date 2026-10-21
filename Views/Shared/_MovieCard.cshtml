@@ -1,0 +1,7 @@
+@model Movie
+<article class="movie-card">
+  <a class="poster-link" href="/Movies/Details/@Model.Id"><img class="movie-poster" src="@Model.PosterUrl" alt="Poster @Model.Title" loading="lazy" /><span class="age-badge">@Model.AgeRating</span><span class="poster-hover">Khám phá bộ phim ↗</span></a>
+  <div class="movie-meta"><span>@Model.Genre</span><span>@Model.DurationMinutes phút</span></div>
+  <h3><a href="/Movies/Details/@Model.Id">@Model.Title</a></h3>
+  <a class="movie-cta" href="/Movies/Details/@Model.Id@(Model.Status == MovieStatus.NOW_SHOWING ? "#showtimes" : "")">@(Model.Status == MovieStatus.NOW_SHOWING ? "Đặt vé" : "Xem chi tiết") <span aria-hidden="true">↗</span></a>
+</article>

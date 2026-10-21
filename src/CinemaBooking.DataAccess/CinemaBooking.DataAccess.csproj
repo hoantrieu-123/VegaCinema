@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <EmbeddedResource Include="SeedData\movie-posters.json" />
+    <ProjectReference Include="..\CinemaBooking.Domain\CinemaBooking.Domain.csproj" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.32" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.32" PrivateAssets="all" />
+    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="8.0.3" />
+  </ItemGroup>
+</Project>

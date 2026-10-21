@@ -1,0 +1,39 @@
+@model HomePage
+@{ ViewData["Title"] = "Một thế giới mới đang chờ bạn"; var featured = Model.NowShowing.FirstOrDefault(); }
+<section class="hero">
+  @if (Model.NowShowing.Count > 0)
+  {
+    <div class="hero-art hero-poster-art" aria-hidden="true"><div class="hero-poster-wall">@foreach (var movie in Model.NowShowing.Take(12)) { <img src="@movie.PosterUrl" alt="" /> }</div></div>
+  }
+  else { <div class="hero-art" aria-hidden="true"></div> }
+  <div class="hero-grain" aria-hidden="true"></div>
+  <div class="container hero-content"><div class="hero-kicker"><span class="live-dot"></span> TIÊU ĐIỂM ĐIỆN ẢNH <span class="hero-line"></span> VEGA ORIGINAL SELECTION</div>
+    <p class="hero-intro">Vượt khỏi màn ảnh.</p><h1>MỞ LỐI<br />NHỮNG <em>THẾ GIỚI.</em></h1>
+    <p class="hero-description">Một chuyến phiêu lưu mới. Một cảm xúc chưa từng.<br />Để mỗi lần đến rạp là một lần đáng nhớ.</p>
+    @if (featured is not null) { <div class="hero-film"><span class="age-badge static">@featured.AgeRating</span><span>@featured.Title</span><span class="hero-divider">/</span><span>@featured.DurationMinutes phút</span></div><a class="btn btn-vega" href="/Movies/Details/@featured.Id#showtimes">Đặt vé ngay <span>↗</span></a><a class="hero-secondary" href="/Movies/Details/@featured.Id">Khám phá bộ phim <span>→</span></a> }
+    <div class="hero-bottom"><span><b>01</b> / ĐIỆN ẢNH KHÔNG GIỚI HẠN</span><span class="hero-scroll">CUỘN ĐỂ KHÁM PHÁ ↓</span></div>
+  </div>
+  <span class="hero-orbit-label" aria-hidden="true">BEYOND THE ORDINARY<br /><b>VEGA / 2026</b></span>
+</section>
+<div class="container quick-book-wrap"><form class="quick-book" action="/Schedule" method="get">
+  <div class="quick-title"><span class="ticket-symbol">▰</span><div>ĐẶT VÉ NHANH<small>Chọn phim. Chọn ghế. Tận hưởng.</small></div></div>
+  <div class="quick-field"><label for="quick-movie">01 · BỘ PHIM CỦA BẠN</label><select id="quick-movie" name="movieId"><option value="">Bạn muốn xem phim gì?</option>@foreach (var movie in Model.NowShowing) { <option value="@movie.Id">@movie.Title</option> }</select></div>
+  <div class="quick-field"><label for="quick-cinema">02 · ĐIỂM HẸN ĐIỆN ẢNH</label><select id="quick-cinema" name="cinemaId"><option value="">Chọn rạp chiếu</option>@foreach (var cinema in Model.Clusters.SelectMany(x => x.Cinemas)) { <option value="@cinema.Id">@cinema.Name</option> }</select></div>
+  <div class="quick-field"><label for="quick-date">03 · NGÀY TRẢI NGHIỆM</label><input id="quick-date" type="date" name="date" value="@VietnamTime.Local(DateTime.UtcNow).ToString("yyyy-MM-dd")" /></div>
+  <button class="btn btn-vega" type="submit">Tìm suất chiếu <span>→</span></button>
+</form></div>
+<section class="container section movies-section"><div class="section-heading"><div><span class="eyebrow">BẬT CẢM XÚC. CHẠM ĐIỆN ẢNH.</span><h2>Hôm nay, xem gì<span class="red">?</span></h2></div><a class="text-link" href="/Movies?status=NOW_SHOWING">Tất cả phim <span>↗</span></a></div>
+  <div class="section-tabs"><a class="selected" href="/Movies?status=NOW_SHOWING">Đang chiếu <span>@Model.NowShowing.Count.ToString("00")</span></a><a href="/Movies?status=COMING_SOON">Sắp chiếu <span>@Model.ComingSoon.Count.ToString("00")</span></a><span class="tabs-note">MỘT TẤM VÉ · NGÀN TRẢI NGHIỆM</span></div>
+  <div class="movie-grid">@foreach (var movie in Model.NowShowing) { <partial name="_MovieCard" model="movie" /> }</div>
+  @if (Model.NowShowing.Count == 0) { <div class="empty-state">Các bộ phim mới đang được cập nhật. Hẹn bạn sớm tại VEGA.</div> }
+</section>
+<section class="experience-strip"><div class="container experience-inner"><div class="experience-icon">✦</div><div><span class="eyebrow">KHÔNG CHỈ LÀ XEM PHIM</span><h2>Đắm chìm trong từng khoảnh khắc.</h2></div><div class="experience-facts"><span><b>DOLBY 7.1</b>Âm thanh bao trùm</span><span><b>BIG SCREEN</b>Màn ảnh sống động</span><span><b>YOUR SEAT</b>Chọn chỗ yêu thích</span></div><a href="/Cinemas" class="circle-link" aria-label="Khám phá hệ thống rạp">↗</a></div></section>
+@if (Model.ComingSoon.Count > 0)
+{
+<section class="container section"><div class="section-heading"><div><span class="eyebrow">ĐỪNG BỎ LỠ CUỘC HẸN</span><h2>Sắp chạm màn ảnh<span class="red">.</span></h2></div><a class="text-link" href="/Movies?status=COMING_SOON">Xem tất cả ↗</a></div>
+  <div class="coming-grid">@foreach (var movie in Model.ComingSoon) { <a class="coming-card" href="/Movies/Details/@movie.Id"><img src="@movie.PosterUrl" alt="@movie.Title" loading="lazy" /><div><span class="eyebrow">KHỞI CHIẾU @movie.ReleaseDate.ToString("dd.MM")</span><h3>@movie.Title</h3><p>@movie.Genre · @movie.DurationMinutes phút</p><span class="text-link">Khám phá ngay ↗</span></div></a> }</div>
+</section>
+}
+<section class="container section nearest-section"><div class="section-heading"><div><span class="eyebrow">MÀN ẢNH ĐANG CHỜ</span><h2>Những suất chiếu tiếp theo<span class="red">.</span></h2></div><a href="/Schedule" class="text-link">Toàn bộ lịch chiếu ↗</a></div><div class="nearest-grid">
+  @foreach (var show in Model.Showtimes) { <a class="nearest-show" href="/Booking/Seats/@show.Id"><span class="show-time">@VietnamTime.Local(show.StartsAtUtc).ToString("HH:mm")<small>@VietnamTime.Local(show.StartsAtUtc).ToString("dd/MM")</small></span><div><h3>@show.Movie.Title</h3><p>@show.ScreeningRoom.Cinema.Name · 2D Phụ đề</p></div><span class="red">↗</span></a> }
+</div></section>

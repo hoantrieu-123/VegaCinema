@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>vega-cinemas-local-development</UserSecretsId>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="src\**;tests\**;.tools\**;.local\**" />
+    <Content Remove="src\**;tests\**;.local\**;.packages\**" />
+    <None Remove=".local\**;.packages\**" />
+    <Content Update="appsettings.Local.json" CopyToOutputDirectory="Never" CopyToPublishDirectory="Never" />
+    <ProjectReference Include="src\CinemaBooking.Business\CinemaBooking.Business.csproj" />
+    <ProjectReference Include="src\CinemaBooking.Integrations\CinemaBooking.Integrations.csproj" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.32" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

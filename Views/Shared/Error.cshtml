@@ -1,0 +1,17 @@
+﻿@model ErrorViewModel
+@{
+    ViewData["Title"] = "Có lỗi xảy ra";
+}
+
+<section class="container page-section empty-state"><span class="eyebrow">VEGA CINEMAS</span>
+<h1>Chưa thể hoàn tất yêu cầu.</h1>
+<p>Vui lòng thử lại sau. Nếu bạn đang thanh toán, hãy kiểm tra lịch sử đơn trước khi tạo giao dịch mới.</p>
+
+@if (Model.ShowRequestId)
+{
+    <p>
+        <strong>Mã yêu cầu:</strong> <code>@Model.RequestId</code>
+    </p>
+}
+
+<a class="btn btn-vega" href="/Booking/History">Kiểm tra đơn đặt vé →</a></section>
