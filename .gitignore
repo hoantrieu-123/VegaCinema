@@ -8,4 +8,9 @@ obj/
 TestResults/
 appsettings.Local.json
 .env
+.env.*
 *.log
+*.db
+*.db-shm
+*.db-wal
+exports/

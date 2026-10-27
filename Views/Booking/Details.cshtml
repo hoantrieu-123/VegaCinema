@@ -1,11 +1,111 @@
 @model Booking
-@{ ViewData["Title"] = "Đơn đặt vé"; var show = Model.Showtime; var issued = Model.Status == BookingStatus.TICKET_ISSUED; }
-<section class="container page-section"><div class="order-heading"><div class="status-icon @(issued ? "success" : "")">@(issued ? "✓" : "◷")</div><span class="eyebrow">@(issued ? "CUỘC HẸN ĐÃ SẴN SÀNG" : "THÔNG TIN GIAO DỊCH")</span><h1>@(issued ? "Hẹn bạn tại VEGA!" : "Đơn đặt vé của bạn")</h1><p class="muted">@(issued ? "Xuất trình mã QR của từng vé khi vào phòng chiếu." : "Kiểm tra trạng thái và thông tin đơn bên dưới.")</p><span class="status-pill">@T(Model.Status)</span></div>
-<div class="panel order-detail"><div class="summary-movie"><img src="@show.Movie.PosterUrl" alt="@show.Movie.Title" /><div><h2>@show.Movie.Title</h2><p>@show.ScreeningRoom.Cinema.Name · @show.ScreeningRoom.Name</p><p>@VietnamTime.Local(show.StartsAtUtc).ToString("HH:mm · dd/MM/yyyy")</p><p>Ghế: <strong>@string.Join(", ", Model.Details.Select(x => x.ShowtimeSeat.Seat.Label))</strong></p></div></div><dl class="summary-list"><div><dt>Mã đặt vé</dt><dd class="break-word">@Model.Code</dd></div><div><dt>Khách hàng</dt><dd>@Model.User.FullName</dd></div><div><dt>Tổng tiền</dt><dd>@VietnamTime.Money(Model.Total)</dd></div></dl></div>
-@if (Model.Details.Any(x => x.Ticket is not null)) { <div class="ticket-grid">@foreach (var d in Model.Details.Where(x => x.Ticket is not null)) { var t = d.Ticket!; <article class="e-ticket"><div class="ticket-top"><span>VEGA CINEMAS</span><span>@T(t.Status)</span></div><h2>@show.Movie.Title</h2><p>@show.ScreeningRoom.Cinema.Name<br />@show.ScreeningRoom.Name</p><div class="ticket-date"><span>NGÀY CHIẾU<b>@VietnamTime.Local(show.StartsAtUtc).ToString("dd.MM.yyyy")</b></span><span>GIỜ<b>@VietnamTime.Local(show.StartsAtUtc).ToString("HH:mm")</b></span><span>GHẾ<b>@d.ShowtimeSeat.Seat.Label</b></span></div><div class="ticket-perforation"></div><div class="ticket-qr"><img src="/Tickets/Qr?code=@t.Code" alt="Mã QR vé @t.Code" /><div><span>MÃ VÉ ĐIỆN TỬ</span><p>@t.Code</p><small>Một mã QR · Một lần vào rạp</small></div></div></article> }</div><div class="order-actions no-print"><button type="button" class="btn btn-vega" data-print>In / Lưu vé PDF ↗</button></div> }
-<div class="order-actions no-print">@if (Model.Status is BookingStatus.SEAT_HELD or BookingStatus.PAYMENT_PENDING) { <a class="btn btn-vega" href="/Booking/Checkout/@Model.Id">Tiếp tục thanh toán →</a> }
-@if (Model.UserId == User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value && Model.Status is not (BookingStatus.CANCELLED or BookingStatus.EXPIRED)) { <form action="/Booking/Cancel" method="post" data-confirm="Bạn muốn hủy đơn đặt vé này?">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@Model.Id" /><button type="submit" class="btn btn-outline-light">Hủy đơn theo chính sách</button></form> }<a class="text-link" href="/Booking/History">Vé của tôi →</a></div>
-@if (Model.Payments.Count > 0) { <div class="panel payment-history no-print"><h2>Lịch sử giao dịch</h2><div class="table-responsive"><table class="table vega-table"><thead><tr><th>Mã giao dịch</th><th>Thời điểm</th><th>Số tiền</th><th>Kết quả</th></tr></thead><tbody>@foreach (var p in Model.Payments) { <tr><td class="break-word">@p.TransactionCode</td><td>@VietnamTime.Local(p.CreatedAtUtc).ToString("dd/MM HH:mm")</td><td>@VietnamTime.Money(p.Amount)</td><td>@T(p.Status)
-@if (User.IsInRole(Roles.Admin) && p.Status == PaymentStatus.PENDING && p.GatewayReceiptJson is not null) { <form action="/Admin/Reconciliation/Retry" method="post">@Html.AntiForgeryToken()<input type="hidden" name="paymentId" value="@p.Id" /><input type="hidden" name="bookingId" value="@Model.Id" /><button class="btn btn-outline-light btn-sm mt-2" type="submit">Xử lý lại xác nhận</button></form> }
-</td></tr> }</tbody></table></div></div> }
+@{
+    ViewData["Title"] = "Đơn đặt vé"; var show = Model.Showtime; var issued = Model.Status ==
+    BookingStatus.TICKET_ISSUED;
+}
+<section class="container page-section">
+    <div class="order-heading">
+        <div class="status-icon @(issued ? "success" : "")">@(issued ? "✓" : "◷")</div><span class="eyebrow">@(issued ?
+                         "CUỘC HẸN ĐÃ SẴN SÀNG" : "THÔNG TIN GIAO DỊCH")</span>
+        <h1>@(issued ? "Hẹn bạn tại VEGA!" : "Đơn đặt vé của bạn")</h1>
+        <p class="muted">@(issued ? "Xuất trình mã QR của từng vé khi vào phòng chiếu." : "Kiểm tra trạng thái và thông tin đơn bên dưới.")</p><span class="status-pill">@T(Model.Status)</span>
+    </div>
+    <div class="panel order-detail">
+        <div class="summary-movie"><img src="@show.Movie.PosterUrl" alt="@show.Movie.Title" />
+            <div>
+                <h2>@show.Movie.Title</h2>
+                <p>@show.ScreeningRoom.Cinema.Name · @show.ScreeningRoom.Name</p>
+                <p>@VietnamTime.Local(show.StartsAtUtc).ToString("HH:mm · dd/MM/yyyy")</p>
+                <p>Ghế: <strong>@string.Join(", ", Model.Details.Select(x => x.ShowtimeSeat.Seat.Label))</strong></p>
+            </div>
+        </div>
+        <dl class="summary-list">
+            <div>
+                <dt>Mã đặt vé</dt>
+                <dd class="break-word">@Model.Code</dd>
+            </div>
+            <div>
+                <dt>Khách hàng</dt>
+                <dd>@Model.User.FullName</dd>
+            </div>
+            <div>
+                <dt>Tổng tiền</dt>
+                <dd>@VietnamTime.Money(Model.Total)</dd>
+            </div>
+        </dl>
+    </div>
+    @if (Model.Details.Any(x => x.Ticket is not null))
+    {
+        <div class="ticket-grid">@foreach (var d in
+            Model.Details.Where(x => x.Ticket is not null)) {
+                var t = d.Ticket!;
+                <article class="e-ticket">
+                    <div class="ticket-top"><span>VEGA CINEMAS</span><span>@T(t.Status)</span></div>
+                    <h2>@show.Movie.Title</h2>
+                    <p>@show.ScreeningRoom.Cinema.Name<br />@show.ScreeningRoom.Name</p>
+                    <div class="ticket-date"><span>NGÀY
+                        CHIẾU<b>@VietnamTime.Local(show.StartsAtUtc).ToString("dd.MM.yyyy")</b></span><span>GIỜ<b>@VietnamTime.Local(show.StartsAtUtc).ToString("HH:mm")</b></span><span>GHẾ<b>@d.ShowtimeSeat.Seat.Label</b></span>
+                    </div>
+                    <div class="ticket-perforation"></div>
+                    <div class="ticket-qr"><img src="/Tickets/Qr?code=@t.Code" alt="Mã QR vé @t.Code" />
+                        <div><span>MÃ VÉ ĐIỆN TỬ</span>
+                            <p>@t.Code</p><small>Một mã QR · Một lần vào rạp</small>
+                        </div>
+                    </div>
+                </article>
+            }
+        </div>
+        <div class="order-actions no-print"><button type="button" class="btn btn-vega" data-print>In / Lưu vé PDF ↗</button>
+        </div>
+    }
+    <div class="order-actions no-print">@if (Model.Status is BookingStatus.SEAT_HELD or BookingStatus.PAYMENT_PENDING) {
+        <a class="btn btn-vega" href="/Booking/Checkout/@Model.Id">Tiếp tục thanh toán →</a>
+    }
+    @if (Model.UserId == User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value && Model.Status is
+            not (BookingStatus.CANCELLED or BookingStatus.EXPIRED))
+    {
+        <form action="/Booking/Cancel" method="post" data-confirm="Bạn muốn hủy đơn đặt vé này?">
+            @Html.AntiForgeryToken()<input type="hidden" name="id" value="@Model.Id" /><button type="submit"
+                                                                                               class="btn btn-outline-light">Hủy đơn theo chính sách</button>
+        </form>
+    }
+    <a class="text-link" href="/Booking/History">Vé của tôi →</a>
+</div>
+@if (Model.Payments.Count > 0)
+{
+    <div class="panel payment-history no-print">
+        <h2>Lịch sử giao dịch</h2>
+        <div class="table-responsive">
+            <table class="table vega-table">
+                <thead>
+                    <tr>
+                        <th>Mã giao dịch</th>
+                        <th>Thời điểm</th>
+                        <th>Số tiền</th>
+                        <th>Kết quả</th>
+                    </tr>
+                </thead>
+                <tbody>@foreach (var p in Model.Payments) {
+                    <tr>
+                        <td class="break-word">@p.TransactionCode</td>
+                        <td>@VietnamTime.Local(p.CreatedAtUtc).ToString("dd/MM HH:mm")</td>
+                        <td>@VietnamTime.Money(p.Amount)</td>
+                        <td>@T(p.Status)
+                            @if (User.IsInRole(Roles.Admin) && p.Status == PaymentStatus.PENDING && p.GatewayReceiptJson
+                                                        is not null)
+                            {
+                                <form action="/Admin/Reconciliation/Retry" method="post">
+                                    @Html.AntiForgeryToken()<input type="hidden" name="paymentId" value="@p.Id" /><input
+                                    type="hidden" name="bookingId" value="@Model.Id" /><button
+                                    class="btn btn-outline-light btn-sm mt-2" type="submit">Xử lý lại xác nhận</button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+}
 </section>

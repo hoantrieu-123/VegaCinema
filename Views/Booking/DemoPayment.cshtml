@@ -1,0 +1,23 @@
+@model DemoPaymentPage
+@{ ViewData["Title"] = "Xác nhận thanh toán"; var b = Model.Booking; }
+<section class="container page-section narrow-page">
+    <a class="back-link" asp-action="Checkout" asp-route-id="@b.Id">← Trở lại mã QR</a>
+    <div class="page-heading"><span class="demo-badge">CỔNG THANH TOÁN QR</span><h1>Xác nhận thanh toán<span class="red">.</span></h1><p>Mô phỏng giao dịch cho đơn vé của bạn. Không nhập tài khoản ngân hàng, không thu tiền thật.</p></div>
+    <div class="panel form-panel demo-payment-panel">
+        <h2>@b.Showtime.Movie.Title</h2>
+        <p>@b.Showtime.ScreeningRoom.Cinema.Name · @b.Showtime.ScreeningRoom.Name<br />@VietnamTime.Local(b.Showtime.StartsAtUtc).ToString("HH:mm · dd/MM/yyyy")<br />Ghế <strong>@string.Join(", ", b.Details.Select(x => x.ShowtimeSeat.Seat.Label))</strong></p>
+        <partial name="_BookingCustomer" model="@(new CustomerContact(b.User.FullName, b.User.Email ?? "", b.User.PhoneNumber))" />
+        <div class="countdown" data-expires="@DateTime.SpecifyKind(b.ExpiresAtUtc, DateTimeKind.Utc).ToString("O")" data-server-now="@DateTime.SpecifyKind(Model.ServerNowUtc, DateTimeKind.Utc).ToString("O")"><span>Mã thanh toán còn hiệu lực</span><strong id="countdown">--:--</strong></div>
+        <div class="summary-total"><span>Số tiền</span><strong>@VietnamTime.Money(Model.Payment.Amount)</strong></div>
+        <p class="payment-reference">Mã giao dịch <span>@Model.Payment.TransactionCode</span></p>
+        <form id="payment-form" asp-action="Pay" method="post">
+            <input type="hidden" name="id" value="@b.Id" />
+            <input type="hidden" name="paymentId" value="@Model.Payment.Id" />
+            <label class="payment-choice"><input type="radio" name="scenario" value="SUCCESS" checked /><span class="payment-icon">✓</span><span><strong>Thanh toán thành công</strong><small>Phát hành vé điện tử cho từng ghế</small></span></label>
+            <details class="demo-other-results"><summary>Thử kết quả thanh toán khác</summary><label class="payment-choice"><input type="radio" name="scenario" value="FAILED" /><span class="payment-icon">×</span><span><strong>Mô phỏng thất bại</strong><small>Giải phóng ghế, không phát hành vé</small></span></label><label class="payment-choice"><input type="radio" name="scenario" value="TIMEOUT" /><span class="payment-icon">◷</span><span><strong>Mô phỏng hết thời gian</strong><small>Giao dịch hết hạn, không phát hành vé</small></span></label></details>
+            <button id="pay-button" class="btn btn-vega w-100 mt-4" type="submit">Xác nhận thanh toán→</button>
+            <p id="payment-status" class="muted small mt-3" role="status"></p>
+        </form>
+        <p class="muted small summary-note">Khi xác nhận, bạn đồng ý với <a href="/Home/Privacy">chính sách đặt vé</a> của VEGA CINEMAS.</p>
+    </div>
+</section>

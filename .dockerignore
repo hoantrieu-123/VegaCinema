@@ -1,0 +1,15 @@
+**/bin/
+**/obj/
+.git/
+.vs/
+.vscode/
+.local/
+.tools/
+exports/
+artifacts/
+appsettings.Local.json
+.env
+.env.*
+*.db
+*.db-shm
+*.db-wal

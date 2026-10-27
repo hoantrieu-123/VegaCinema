@@ -31,6 +31,13 @@ namespace CinemaBooking.DataAccess.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
+                    b.Property<string>("Address")
+                        .HasMaxLength(250)
+                        .HasColumnType("varchar(250)");
+
+                    b.Property<int?>("BirthYear")
+                        .HasColumnType("int");
+
                     b.Property<int?>("CinemaClusterId")
                         .HasColumnType("int");
 
@@ -49,6 +56,9 @@ namespace CinemaBooking.DataAccess.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("varchar(100)");
+
+                    b.Property<int?>("Gender")
+                        .HasColumnType("int");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("tinyint(1)");

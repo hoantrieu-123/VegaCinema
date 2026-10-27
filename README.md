@@ -22,6 +22,22 @@ Script chuẩn bị một MySQL Community 8.4.6 riêng tại `.local/`, dùng c�
 
 Để chạy bằng Visual Studio với MySQL portable, giữ MySQL riêng đang chạy, hoặc dùng MySQL/Docker theo hướng dẫn bên dưới. `dotnet run` cần database hoạt động trước khi khởi động.
 
+Các profile localhost chọn `Database:Provider=MySql`. `Start-Local.ps1` đặt lại provider, bật migrations và seed danh mục trong `appsettings.Local.json`, giữ nguyên tài khoản và dữ liệu MySQL đã có. Nếu trước đó chọn SQLite/Turso để thử deploy, hãy chạy script này để trở lại database cục bộ. Cấu hình môi trường production vẫn dùng riêng.
+
+## Nén project thành ZIP
+
+Chạy tại thư mục dự án:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Zip-Project.ps1
+```
+
+File ZIP được tạo trong `exports/`, gồm mã nguồn hiện tại (kể cả thay đổi chưa commit), solution, migrations, toàn bộ ảnh trong `Phim/` và `wwwroot/`, script và tài liệu. Không cần dừng MySQL. Script bỏ qua `.local/` chứa database đang chạy, mật khẩu/chứng chỉ riêng, `.git/`, `.vs/`, `.nuget/`, `.packages/`, `.tools/`, `bin/`, `obj/` và ZIP đã tạo.
+
+`exports/` và `artifacts/` được loại khỏi build, Razor và publish bằng `Directory.Build.props`. Có thể giữ bản giải nén trong `exports/` mà không bị biên dịch trùng. Khi muốn chạy bản giải nén độc lập, mở solution bên trong bản đó; không chép mã nguồn của bản giải nén vào các thư mục mã nguồn của project gốc.
+
+ZIP này không phải bản sao lưu database hiện tại: tài khoản, vé và các thay đổi dữ liệu cần được xuất riêng bằng công cụ backup MySQL nếu muốn giữ lại. Trên máy khác, giải nén rồi chạy `scripts/Start-Local.ps1` để tạo database demo mới; lần đầu cần .NET SDK và Internet để tải MySQL/NuGet.
+
 ## Công nghệ và cấu trúc
 
 Yêu cầu SDK .NET 8 trở lên có khả năng target `net8.0`, runtime ASP.NET Core 8, Visual Studio 2022 hỗ trợ .NET 8, MySQL 8.4/InnoDB.
@@ -101,9 +117,9 @@ Khi bổ sung ảnh vào `Phim/`, chạy `python scripts/import-movie-posters.py
 ## Thử các chức năng
 
 1. Mở trang chủ → tìm/lọc phim hoặc đặt vé nhanh → chọn suất.
-2. Đăng nhập customer → chọn tối đa 8 ghế → tiếp tục. Đến bước này backend mới giữ ghế.
-3. Checkout hiển thị countdown dựa trên `serverNowUtc` và `expiresAtUtc`; chọn SUCCESS, FAILED hoặc TIMEOUT.
-4. SUCCESS tạo một vé/ghế; xem QR và dùng **In / Lưu vé PDF**. FAILED/TIMEOUT không tạo vé và trả ghế về trống.
+2. Đăng ký với họ tên, năm sinh, giới tính, email, địa chỉ, số điện thoại và mật khẩu; có thể sửa thông tin tại Hồ sơ. Tài khoản cũ vẫn đăng nhập được và có thể bổ sung thông tin còn thiếu.
+3. Đăng nhập → chọn tối đa 8 ghế → tiếp tục. Họ tên, email, số điện thoại tự hiển thị từ hồ sơ; backend giữ ghế và tạo một giao dịch QR demo riêng cho đơn. Checkout có countdown theo thời gian server.
+4. Quét QR để mở trang xác nhận demo, hoặc bấm **Mở thanh toán QR demo** trên cùng máy (địa chỉ localhost không mở được từ điện thoại khác). Chọn **Xác nhận thanh toán demo** để mô phỏng thành công → hiển thị chi tiết vé, QR vào rạp và **In / Lưu vé PDF**. Trong **Thử kết quả thanh toán khác** có FAILED/TIMEOUT: không phát hành vé và trả ghế. Không có chuyển khoản hay tiền thật.
 5. Đăng nhập checker → menu Kiểm soát vé → nhập mã hoặc dùng máy quét QR dạng bàn phím → xác nhận. Vé USED không dùng lại được.
 6. Customer xem lịch sử, hồ sơ, đổi mật khẩu; hủy cả đơn theo chính sách (vé chưa dùng, cách giờ chiếu ≥2 giờ). Hoàn tiền là bản ghi mô phỏng.
 7. Admin có sidebar quản lý phim/cụm/rạp/phòng/ghế/suất, user/vai trò/phạm vi, tra cứu booking/payment/ticket, nhật ký và báo cáo. Các danh sách có tìm kiếm, lọc và phân trang; sửa trường có validation server.

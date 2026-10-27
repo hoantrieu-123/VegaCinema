@@ -21,17 +21,22 @@ public class AccountController(UserManager<ApplicationUser> users, SignInManager
     [HttpPost] public async Task<IActionResult> Register(RegisterInput input)
     {
         if (!ModelState.IsValid) return View(input);
-        try { var user = await service.RegisterAsync(input.FullName, input.Email, input.Password); await signIn.SignInAsync(user, false); return RedirectToAction("Index", "Home"); }
+        try { var user = await service.RegisterAsync(input.FullName, input.Email, input.Password, input.BirthYear!.Value, input.Gender!.Value, input.Address, input.Phone); await signIn.SignInAsync(user, false); return RedirectToAction("Index", "Home"); }
         catch (BusinessException e) { ModelState.AddModelError("", e.Message); return View(input); }
     }
     [Authorize, HttpPost] public async Task<IActionResult> Logout() { await signIn.SignOutAsync(); return RedirectToAction("Index", "Home"); }
     [Authorize, HttpGet] public async Task<IActionResult> Profile()
-    { var u = (await users.GetUserAsync(User))!; return View(new ProfileInput { FullName = u.FullName, Email = u.Email!, Phone = u.PhoneNumber }); }
+    { var u = (await users.GetUserAsync(User))!; return View(new ProfileInput { FullName = u.FullName, Email = u.Email!, Phone = u.PhoneNumber ?? "", BirthYear = u.BirthYear, Gender = u.Gender, Address = u.Address ?? "" }); }
     [Authorize, HttpPost] public async Task<IActionResult> Profile(ProfileInput input)
     {
         var user = (await users.GetUserAsync(User))!; input.Email = user.Email!;
         if (!ModelState.IsValid) return View(input);
-        await service.UpdateProfileAsync(user, input.FullName, input.Phone); TempData["Success"] = "Đã cập nhật thông tin cá nhân."; return RedirectToAction(nameof(Profile));
+        try
+        {
+            await service.UpdateProfileAsync(user, input.FullName, input.Phone, input.BirthYear!.Value, input.Gender!.Value, input.Address);
+            TempData["Success"] = "Đã cập nhật thông tin cá nhân."; return RedirectToAction(nameof(Profile));
+        }
+        catch (BusinessException e) { ModelState.AddModelError("", e.Message); return View(input); }
     }
     [Authorize, HttpGet] public IActionResult Password() => View(new PasswordInput());
     [Authorize, HttpPost] public async Task<IActionResult> Password(PasswordInput input)

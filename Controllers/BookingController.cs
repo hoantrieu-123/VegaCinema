@@ -7,12 +7,14 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VegaCinema.ViewModels;
 namespace VegaCinema.Controllers;
-public class BookingController(BookingService bookings, ShowtimeService shows, SeatHoldService holds, PaymentService payments, TimeProvider clock, UserManager<ApplicationUser> users) : Controller
+public class BookingController(BookingService bookings, ShowtimeService shows, SeatHoldService holds, PaymentService payments, TimeProvider clock, UserManager<ApplicationUser> users, IQrCode qr) : Controller
 {
     public async Task<IActionResult> Seats(int id)
     {
         var show = await shows.Query().SingleOrDefaultAsync(x => x.Id == id); if (show is null) return NotFound();
-        return View(new SeatPage(show, await shows.SeatsAsync(id)));
+        var user = User.Identity?.IsAuthenticated == true ? await users.GetUserAsync(User) : null;
+        var customer = user is null ? null : new CustomerContact(user.FullName, user.Email ?? "", user.PhoneNumber);
+        return View(new SeatPage(show, await shows.SeatsAsync(id), customer));
     }
     [HttpGet] public async Task<IActionResult> Availability(int id)
     {
@@ -25,6 +27,7 @@ public class BookingController(BookingService bookings, ShowtimeService shows, S
     {
         if (!ModelState.IsValid || input.SeatIds is null) return BadRequest(new { message = "Danh sách ghế không hợp lệ." });
         var booking = await bookings.HoldAsync(User.FindFirstValue(ClaimTypes.NameIdentifier)!, input.ShowtimeId, input.SeatIds);
+        await payments.PrepareAsync(booking.Id, booking.UserId);
         return Json(new { redirectUrl = Url.Action(nameof(Checkout), new { id = booking.Id }) });
     }
     [Authorize] public async Task<IActionResult> Checkout(Guid id)
@@ -33,11 +36,40 @@ public class BookingController(BookingService bookings, ShowtimeService shows, S
         if (booking.Status == BookingStatus.TICKET_ISSUED) return RedirectToAction(nameof(Details), new { id });
         return View(new CheckoutPage(booking, clock.GetUtcNow().UtcDateTime));
     }
-    [Authorize, HttpPost] public async Task<IActionResult> Pay(Guid id, string scenario)
+    [Authorize, HttpPost] public async Task<IActionResult> CreatePaymentQr(Guid id)
     {
-        await payments.PayAsync(id, User.FindFirstValue(ClaimTypes.NameIdentifier)!, scenario);
+        await payments.PrepareAsync(id, User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        return RedirectToAction(nameof(Checkout), new { id });
+    }
+    [Authorize, HttpGet, ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    public async Task<IActionResult> PaymentQr(Guid id, Guid paymentId)
+    {
+        var booking = await bookings.GetOwnedAsync(id, User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        if (!CanPay(booking, paymentId)) return NotFound();
+        var url = Url.Action(nameof(DemoPayment), "Booking", new { id, paymentId }, Request.Scheme)!;
+        return File(qr.CreatePng(url), "image/png");
+    }
+    [Authorize, HttpGet, ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    public async Task<IActionResult> DemoPayment(Guid id, Guid paymentId)
+    {
+        await holds.ExpireAsync();
+        var booking = await bookings.GetOwnedAsync(id, User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        if (booking.Status == BookingStatus.TICKET_ISSUED) return RedirectToAction(nameof(Details), new { id });
+        if (!CanPay(booking, paymentId)) return RedirectToAction(nameof(Checkout), new { id });
+        return View(new DemoPaymentPage(booking, booking.Payments.Single(x => x.Id == paymentId), clock.GetUtcNow().UtcDateTime));
+    }
+    [Authorize, HttpPost] public async Task<IActionResult> Pay(Guid id, Guid paymentId, string scenario)
+    {
+        var booking = await bookings.GetOwnedAsync(id, User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        if (booking.Status == BookingStatus.TICKET_ISSUED) return RedirectToAction(nameof(Details), new { id });
+        if (!CanPay(booking, paymentId)) throw new BusinessException("Mã QR đã hết hạn hoặc giao dịch không thuộc đơn này.");
+        var status = await payments.PayAsync(id, User.FindFirstValue(ClaimTypes.NameIdentifier)!, scenario);
+        if (status == BookingStatus.TICKET_ISSUED) TempData["Success"] = "Thanh toán QR demo thành công. Vé điện tử của bạn đã được phát hành.";
         return RedirectToAction(nameof(Details), new { id });
     }
+    private bool CanPay(Booking booking, Guid paymentId) => booking.Status == BookingStatus.PAYMENT_PENDING
+        && booking.ExpiresAtUtc > clock.GetUtcNow().UtcDateTime
+        && booking.Payments.Any(x => x.Id == paymentId && x.Status == PaymentStatus.PENDING);
     [Authorize] public async Task<IActionResult> Details(Guid id)
     {
         var user = (await users.GetUserAsync(User))!;

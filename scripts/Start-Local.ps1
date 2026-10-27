@@ -63,6 +63,9 @@ try {
     }
     $settingsPath = Join-Path $projectRoot 'appsettings.Local.json'
     $settings = Get-Content -LiteralPath $settingsPath -Raw | ConvertFrom-Json
+    # Local development always uses the existing private MySQL database.
+    # Remote deployment configuration stays in production settings/environment.
+    $settings | Add-Member -Force -NotePropertyName Database -NotePropertyValue @{Provider='MySql';AutoMigrate=$true;SeedDemo=$true}
     if ($settings.ConnectionStrings.VegaDatabase -like '*Port=33316*' -and $settings.ConnectionStrings.VegaDatabase -notlike '*ServerRSAPublicKeyFile=*') {
         $settings.ConnectionStrings.VegaDatabase += ";ServerRSAPublicKeyFile=$dataRoot\public_key.pem"
         $settings | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $settingsPath -Encoding UTF8

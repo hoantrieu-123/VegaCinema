@@ -1,0 +1,10 @@
+@model CustomerContact
+<section class="booking-customer" aria-label="Thông tin người đặt vé">
+    <h2>Người đặt vé</h2>
+    <dl class="customer-contact">
+        <div><dt>Họ tên</dt><dd data-customer="name">@Model.FullName</dd></div>
+        <div><dt>Email</dt><dd data-customer="email">@Model.Email</dd></div>
+        <div><dt>Số điện thoại</dt><dd data-customer="phone">@(string.IsNullOrWhiteSpace(Model.Phone) ? "Chưa cập nhật" : Model.Phone)</dd></div>
+    </dl>
+    <a class="text-link" href="/Account/Profile">Cập nhật hồ sơ ↗</a>
+</section>

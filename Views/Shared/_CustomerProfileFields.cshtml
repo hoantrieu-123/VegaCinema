@@ -1,0 +1,33 @@
+@model CustomerProfileInput
+<div class="profile-fields">
+    <div class="profile-field full-width">
+        <label asp-for="FullName">Họ và tên</label>
+        <input asp-for="FullName" autocomplete="name" maxlength="100" required />
+        <span asp-validation-for="FullName" class="form-error"></span>
+    </div>
+    <div class="profile-field">
+        <label asp-for="BirthYear">Năm sinh</label>
+        <input asp-for="BirthYear" type="number" min="1900" max="@VietnamTime.Local(DateTime.UtcNow).Year" placeholder="Ví dụ: 2000" required />
+        <span asp-validation-for="BirthYear" class="form-error"></span>
+    </div>
+    <div class="profile-field">
+        <label asp-for="Gender">Giới tính</label>
+        <select asp-for="Gender" required>
+            <option value="">Chọn giới tính</option>
+            <option value="Male">Nam</option>
+            <option value="Female">Nữ</option>
+            <option value="Other">Khác</option>
+        </select>
+        <span asp-validation-for="Gender" class="form-error"></span>
+    </div>
+    <div class="profile-field full-width">
+        <label asp-for="Phone">Số điện thoại</label>
+        <input asp-for="Phone" type="tel" autocomplete="tel" maxlength="25" placeholder="Số điện thoại liên hệ đặt vé" required />
+        <span asp-validation-for="Phone" class="form-error"></span>
+    </div>
+    <div class="profile-field full-width">
+        <label asp-for="Address">Địa chỉ</label>
+        <input asp-for="Address" autocomplete="street-address" maxlength="250" required />
+        <span asp-validation-for="Address" class="form-error"></span>
+    </div>
+</div>

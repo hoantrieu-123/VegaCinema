@@ -11,7 +11,7 @@ if (countdown) {
   const tick = () => {
     const remaining = Math.max(0, Math.ceil((expiry - serverNow - (performance.now() - started)) / 1000));
     document.getElementById("countdown").textContent = `${String(Math.floor(remaining / 60)).padStart(2, "0")}:${String(remaining % 60).padStart(2, "0")}`;
-    if (!remaining) { const button = document.getElementById("pay-button"); if (button) button.disabled = true; countdown.classList.add("expired"); const status = document.getElementById("payment-status"); if (status) status.textContent = "Thời gian giữ ghế đã hết. Vui lòng đặt lại."; }
+    if (!remaining) { const button = document.getElementById("pay-button"); if (button) button.disabled = true; const link = document.getElementById("demo-payment-link"); if (link) { link.setAttribute("aria-disabled", "true"); link.tabIndex = -1; } countdown.classList.add("expired"); const status = document.getElementById("payment-status"); if (status) status.textContent = "Thời gian giữ ghế đã hết. Vui lòng đặt lại."; }
   };
   tick(); setInterval(tick, 500);
 }

@@ -5,15 +5,26 @@ using Microsoft.EntityFrameworkCore;
 namespace CinemaBooking.Business.Services;
 public class UserService(UserManager<ApplicationUser> users, VegaDbContext db)
 {
-    public async Task<ApplicationUser> RegisterAsync(string fullName, string email, string password)
+    public async Task<ApplicationUser> RegisterAsync(string fullName, string email, string password, int birthYear, Gender gender, string address, string phone)
     {
-        var user = new ApplicationUser { FullName = fullName.Trim(), Email = email.Trim(), UserName = email.Trim() };
+        ValidateProfile(fullName, birthYear, gender, address, phone);
+        var user = new ApplicationUser { FullName = fullName.Trim(), Email = email.Trim(), UserName = email.Trim(),
+            BirthYear = birthYear, Gender = gender, Address = address.Trim(), PhoneNumber = phone.Trim() };
         Check(await users.CreateAsync(user, password)); Check(await users.AddToRoleAsync(user, Roles.Customer)); return user;
     }
-    public async Task UpdateProfileAsync(ApplicationUser user, string name, string? phone)
+    public async Task UpdateProfileAsync(ApplicationUser user, string name, string phone, int birthYear, Gender gender, string address)
     {
-        if (string.IsNullOrWhiteSpace(name) || name.Length > 100 || phone?.Length > 25) throw new BusinessException("Thông tin cá nhân không hợp lệ.");
-        user.FullName = name.Trim(); user.PhoneNumber = phone; Check(await users.UpdateAsync(user));
+        ValidateProfile(name, birthYear, gender, address, phone);
+        user.FullName = name.Trim(); user.PhoneNumber = phone.Trim(); user.BirthYear = birthYear; user.Gender = gender; user.Address = address.Trim();
+        Check(await users.UpdateAsync(user));
+    }
+    private static void ValidateProfile(string name, int birthYear, Gender gender, string address, string phone)
+    {
+        if (string.IsNullOrWhiteSpace(name) || name.Length > 100 || birthYear < 1900 || birthYear > VietnamTime.Local(DateTime.UtcNow).Year
+            || !Enum.IsDefined(gender) || string.IsNullOrWhiteSpace(address) || address.Length > 250 || string.IsNullOrWhiteSpace(phone)
+            || !System.Text.RegularExpressions.Regex.IsMatch(phone, @"^\+?[0-9][0-9 .()\-]{6,24}$")
+            || !new System.ComponentModel.DataAnnotations.PhoneAttribute().IsValid(phone))
+            throw new BusinessException("Vui lòng kiểm tra họ tên, năm sinh, giới tính, địa chỉ và số điện thoại.");
     }
     public async Task SaveAdminAsync(string? id, string name, string email, string role, int? clusterId, bool active, string? password, string actorId)
     {

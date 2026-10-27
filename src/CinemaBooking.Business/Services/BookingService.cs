@@ -72,7 +72,27 @@ public class BookingService(VegaDbContext db, TimeProvider clock, IOptions<Booki
         await tx.CommitAsync();
     }
 
-    internal Task<Booking?> LockAsync(Guid id) => db.Bookings.FromSqlInterpolated($"SELECT * FROM `Bookings` WHERE `Id` = {id} FOR UPDATE").SingleOrDefaultAsync();
+    
+
+internal Task<Booking?> LockAsync(Guid id)
+{
+    if (db.Database.IsMySql())
+    {
+        return db.Bookings
+            .FromSqlInterpolated(
+                $"SELECT * FROM `Bookings` WHERE `Id` = {id} FOR UPDATE"
+            )
+            .SingleOrDefaultAsync();
+    }
+
+    if (db.Database.IsSqlite())
+    {
+        return db.Bookings.SingleOrDefaultAsync(x => x.Id == id);
+    }
+
+    throw new NotSupportedException("Database không được hỗ trợ.");
+}
+
     internal async Task ReleaseAsync(Booking booking, BookingStatus status)
     {
         await db.ShowtimeSeats.Where(x => x.HoldBookingId == booking.Id)

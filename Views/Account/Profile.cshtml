@@ -1,3 +1,16 @@
 @model ProfileInput
 @{ ViewData["Title"] = "Hồ sơ cá nhân"; }
-<section class="container page-section narrow-page"><div class="page-heading"><span class="eyebrow">GÓC CỦA BẠN</span><h1>Thông tin cá nhân<span class="red">.</span></h1></div><div class="panel form-panel"><form method="post"><div asp-validation-summary="All" class="form-error"></div><label>Email</label><input value="@Model.Email" disabled /><label asp-for="FullName">Họ và tên</label><input asp-for="FullName" maxlength="100" /><label asp-for="Phone">Số điện thoại</label><input asp-for="Phone" type="tel" /><button class="btn btn-vega mt-4" type="submit">Lưu thông tin →</button></form><a class="text-link mt-4 d-inline-block" href="/Account/Password">Đổi mật khẩu ↗</a></div></section>
+<section class="container page-section narrow-page">
+    <div class="page-heading"><span class="eyebrow">GÓC CỦA BẠN</span><h1>Thông tin cá nhân<span class="red">.</span></h1></div>
+    <div class="panel form-panel">
+        <form method="post">
+            <div asp-validation-summary="All" class="form-error" role="alert"></div>
+            <label for="profile-email">Email</label>
+            <input id="profile-email" value="@Model.Email" type="email" readonly />
+            <partial name="_CustomerProfileFields" model="Model" />
+            <p class="muted small mt-3">Họ tên, email và số điện thoại sẽ được điền sẵn khi bạn đặt vé.</p>
+            <button class="btn btn-vega mt-3" type="submit">Lưu thông tin →</button>
+        </form>
+        <a class="text-link mt-4 d-inline-block" href="/Account/Password">Đổi mật khẩu ↗</a>
+    </div>
+</section>

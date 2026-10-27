@@ -14,10 +14,14 @@ public enum SeatType { STANDARD, VIP }
 public enum BookingStatus { CREATED, SEAT_HELD, PAYMENT_PENDING, PAID, TICKET_ISSUED, CANCELLED, EXPIRED }
 public enum PaymentStatus { PENDING, SUCCESS, FAILED, TIMEOUT, REFUND_REQUIRED, REFUNDED }
 public enum TicketStatus { VALID, USED, CANCELLED }
+public enum Gender { Male, Female, Other }
 
 public class ApplicationUser : IdentityUser
 {
     [Required, MaxLength(100)] public string FullName { get; set; } = "";
+    public int? BirthYear { get; set; }
+    public Gender? Gender { get; set; }
+    [MaxLength(250)] public string? Address { get; set; }
     public int? CinemaClusterId { get; set; }
     public CinemaCluster? CinemaCluster { get; set; }
     public bool IsActive { get; set; } = true;

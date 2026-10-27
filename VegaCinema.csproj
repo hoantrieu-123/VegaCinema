@@ -11,6 +11,7 @@
     <Content Remove="src\**;tests\**;.local\**;.packages\**" />
     <None Remove=".local\**;.packages\**" />
     <Content Update="appsettings.Local.json" CopyToOutputDirectory="Never" CopyToPublishDirectory="Never" />
+    <PackageReference Include="Turso.Data.Sqlite.Provider" Version="0.8.3" />
     <ProjectReference Include="src\CinemaBooking.Business\CinemaBooking.Business.csproj" />
     <ProjectReference Include="src\CinemaBooking.Integrations\CinemaBooking.Integrations.csproj" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.32" PrivateAssets="all" />

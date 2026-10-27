@@ -4,6 +4,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RestorePackagesPath>$(MSBuildThisFileDirectory).packages</RestorePackagesPath>
-    <DefaultItemExcludes>$(DefaultItemExcludes);**/.local/**;**/.packages/**;**/.tools/**</DefaultItemExcludes>
+    <!-- Exported/extracted copies must not become source, Razor, or publish items. -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);**/.local/**;**/.packages/**;**/.tools/**;**/.nuget/**;**/exports/**;**/artifacts/**</DefaultItemExcludes>
   </PropertyGroup>
 </Project>

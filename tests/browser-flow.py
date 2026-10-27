@@ -49,6 +49,10 @@ with sync_playwright() as p:
     booking_url = page.url.replace('/Checkout/', '/Details/')
     page.wait_for_function("document.querySelector('#countdown').textContent !== '--:--'")
     page.screenshot(path=str(OUT/'checkout-desktop.png'), full_page=True)
+    assert page.locator('#payment-qr').count() == 1
+    assert page.request.get(base + page.locator('#payment-qr').get_attribute('src')).status == 200
+    page.locator('#demo-payment-link').click()
+    page.wait_for_url('**/Booking/DemoPayment/**')
     page.locator('#pay-button').click()
     page.wait_for_url('**/Booking/Details/**')
     assert page.locator('.e-ticket').count() == 2
@@ -107,6 +111,10 @@ with sync_playwright() as p:
     visit('/Account/Register')
     new_email = 'browser-' + uuid.uuid4().hex[:8] + '@vega.local'
     page.locator('#FullName').fill('Khách kiểm thử trình duyệt')
+    page.locator('#BirthYear').fill('2000')
+    page.locator('#Gender').select_option('Female')
+    page.locator('#Address').fill('123 Nguyễn Trãi, TP. Hồ Chí Minh')
+    page.locator('#Phone').fill('0901234567')
     page.locator('#Email').fill(new_email)
     page.locator('#Password').fill(password)
     page.locator('#ConfirmPassword').fill(password)
@@ -117,6 +125,33 @@ with sync_playwright() as p:
     page.locator('#Phone').fill('0901234567')
     page.get_by_role('button', name='Lưu thông tin').click()
     assert page.locator('#FullName').input_value() == 'Vega Browser QA'
+    assert page.locator('#BirthYear').input_value() == '2000'
+    assert page.locator('#Gender').input_value() == 'Female'
+    assert page.locator('#Address').input_value() == '123 Nguyễn Trãi, TP. Hồ Chí Minh'
+    visit(href)
+    assert page.locator('[data-customer="name"]').inner_text() == 'Vega Browser QA'
+    assert page.locator('[data-customer="email"]').inner_text() == new_email
+    assert page.locator('[data-customer="phone"]').inner_text() == '0901234567'
+    page.locator('.seat[data-status="AVAILABLE"]:not(:disabled)').first.click()
+    page.locator('#hold-seats').click()
+    page.wait_for_url('**/Booking/Checkout/**')
+    checkout_url = page.url
+    assert page.locator('[data-customer="email"]').inner_text() == new_email
+    assert page.locator('[data-customer="phone"]').inner_text() == '0901234567'
+    page.screenshot(path=str(OUT/'customer-qr-desktop.png'), full_page=True)
+    page.set_viewport_size({'width':390,'height':844})
+    assert not page.evaluate('document.documentElement.scrollWidth > innerWidth')
+    page.screenshot(path=str(OUT/'customer-qr-mobile.png'), full_page=True)
+    page.locator('#demo-payment-link').click()
+    page.wait_for_url('**/Booking/DemoPayment/**')
+    assert not page.evaluate('document.documentElement.scrollWidth > innerWidth')
+    page.screenshot(path=str(OUT/'qr-confirm-mobile.png'), full_page=True)
+    page.locator('#pay-button').click()
+    page.wait_for_url('**/Booking/Details/**')
+    assert page.locator('.e-ticket').count() == 1
+    page.screenshot(path=str(OUT/'customer-ticket-mobile.png'), full_page=True)
+    page.set_viewport_size({'width':1440,'height':1000})
+    results.append('New account: all seven profile fields persist; contact prefills seats and checkout; QR confirmation issues one ticket; 390px checkout and payment have no overflow')
     visit('/Account/Password')
     page.locator('#CurrentPassword').fill(password)
     page.locator('#NewPassword').fill(password + 'Z9!')
@@ -132,7 +167,7 @@ with sync_playwright() as p:
     logout()
     results.append('Account: register, update profile, change password and sign in with new password')
     page.set_viewport_size({'width':390,'height':844})
-    for path in ['/', '/Movies', '/Schedule', '/Cinemas', '/Account/Login', href]:
+    for path in ['/', '/Movies', '/Schedule', '/Cinemas', '/Account/Login', '/Account/Register', href]:
         visit(path)
         assert not page.evaluate('document.documentElement.scrollWidth > innerWidth'), 'Mobile overflow: ' + path
     visit('/')

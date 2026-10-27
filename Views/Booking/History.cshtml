@@ -1,6 +1,36 @@
 @model List<Booking>
-@{ ViewData["Title"] = "Vé của tôi"; }
-<section class="container page-section"><div class="page-heading"><span class="eyebrow">NHỮNG CUỘC HẸN ĐIỆN ẢNH</span><h1>Vé của tôi<span class="red">.</span></h1><p>Lịch sử đặt vé và những câu chuyện bạn đã chọn.</p></div>
-@foreach (var b in Model) { <article class="history-card panel"><img src="@b.Showtime.Movie.PosterUrl" alt="@b.Showtime.Movie.Title" /><div><span class="status-pill">@T(b.Status)</span><h2>@b.Showtime.Movie.Title</h2><p>@b.Showtime.ScreeningRoom.Cinema.Name · @VietnamTime.Local(b.Showtime.StartsAtUtc).ToString("dd/MM/yyyy HH:mm")</p><span class="muted">Ghế @string.Join(", ", b.Details.Select(x => x.ShowtimeSeat.Seat.Label))</span></div><div class="history-price"><strong>@VietnamTime.Money(b.Total)</strong><a class="btn btn-outline-light" href="/Booking/Details/@b.Id">Chi tiết đơn ↗</a></div></article> }
-@if (Model.Count == 0) { <div class="empty-state"><h2>Cuộc hẹn đầu tiên đang chờ bạn</h2><p>Khám phá một bộ phim và chọn chỗ ngồi yêu thích.</p><a href="/Movies" class="btn btn-vega">Khám phá phim ↗</a></div> }
-<nav class="pagination-bar" aria-label="Phân trang">@for (var p = 1; p <= (int)Math.Ceiling((int)ViewBag.Total / 10d); p++) { <a asp-route-page="@p" class="@(p == (int)ViewBag.Page ? "selected" : "")">@p</a> }</nav></section>
+@{
+    ViewData["Title"] = "Vé của tôi";
+}
+<section class="container page-section">
+    <div class="page-heading"><span class="eyebrow">NHỮNG CUỘC HẸN ĐIỆN ẢNH</span>
+        <h1>Vé của tôi<span class="red">.</span></h1>
+        <p>Lịch sử đặt vé và những câu chuyện bạn đã chọn.</p>
+    </div>
+    @foreach (var b in Model)
+    {
+        <article class="history-card panel"><img src="@b.Showtime.Movie.PosterUrl"
+                                                     alt="@b.Showtime.Movie.Title" />
+            <div><span class="status-pill">@T(b.Status)</span>
+                <h2>@b.Showtime.Movie.Title</h2>
+                <p>@b.Showtime.ScreeningRoom.Cinema.Name · @VietnamTime.Local(b.Showtime.StartsAtUtc).ToString("dd/MM/yyyy HH:mm")</p><span class="muted">Ghế @string.Join(", ", b.Details.Select(x =>
+                                x.ShowtimeSeat.Seat.Label))</span>
+            </div>
+            <div class="history-price"><strong>@VietnamTime.Money(b.Total)</strong><a class="btn btn-outline-light"
+                                                                                          href="/Booking/Details/@b.Id">Chi tiết đơn ↗</a></div>
+            </article>
+        }
+        @if (Model.Count == 0)
+        {
+            <div class="empty-state">
+                <h2>Cuộc hẹn đầu tiên đang chờ bạn</h2>
+                <p>Khám phá một bộ phim và chọn chỗ ngồi yêu thích.</p><a href="/Movies" class="btn btn-vega">Khám phá phim
+                ↗</a>
+            </div>
+        }
+        <nav class="pagination-bar" aria-label="Phân trang">@for (var p = 1; p <= (int)Math.Ceiling((int)ViewBag.Total /
+            10d); p++) {
+                <a asp-route-page="@p" class="@(p == (int)ViewBag.Page ? "selected" : "")">@p</a>
+            }
+        </nav>
+    </section>
