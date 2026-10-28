@@ -35,7 +35,13 @@
     try {
       const response = await fetch("/Booking/Hold", { method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json", "X-CSRF-TOKEN": root.querySelector('[name="__RequestVerificationToken"]').value }, body: JSON.stringify({ showtimeId: Number(root.dataset.showtime), seatIds: [...selected.keys()] }) });
       if (response.redirected) { window.location.assign(response.url); return; }
-      const data = await response.json(); if (!response.ok) throw new Error(data.message || "Không thể giữ ghế. Vui lòng thử lại.");
+      const body = await response.text();
+      let data = null;
+      if (body) {
+        try { data = JSON.parse(body); } catch { throw new Error(`Máy chủ trả về phản hồi không hợp lệ (${response.status}). Vui lòng thử lại.`); }
+      }
+      if (!response.ok) throw new Error(data?.message || "Không thể giữ ghế. Vui lòng thử lại.");
+      if (!data?.redirectUrl) throw new Error("Không nhận được đường dẫn thanh toán. Vui lòng thử lại.");
       window.location.assign(data.redirectUrl);
     } catch (e) { error.textContent = e.message; await refresh(); hold.disabled = selected.size === 0; hold.textContent = "Tiếp tục thanh toán →"; }
   });
